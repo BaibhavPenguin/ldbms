@@ -24,11 +24,11 @@ Being developed with Python, LDBMS supports both Windows and Linux. It also supp
 
 # Supported commands in LDBMS
 **LDBMS** supports a large number of commands which perform specific functions. To learn about their usage and arguments , check out the usage documentation.  
-<a href="commands.md"><u>Supported Commands - Commands.md</u></a>
+<a href="Commands.md"><u>Supported Commands - Commands.md</u></a>
 
 # Multiline commands in LDBMS
 **LDBMS** differs from other SQL REPL when it comes to formatting and multi line commands, to learn more, check out the formatting documentation.  
-<a href="commands.md"><u>Terminal Formatting & Inlining - Terminal.md</u></a>
+<a href="Terminal.md"><u>Terminal Formatting & Inlining - Terminal.md</u></a>
 
 # Credits & Other Information
 This software comes with <font color = 'white'><strong>absolutely no warranty</strong></font> and is free and open source for anyone to use and modify.  
