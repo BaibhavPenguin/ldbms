@@ -15,3 +15,14 @@ def update_current_db(db_name,db_path):
 
 def get_current_database():
     return [_db_tools.sqlite_current_database['db_name'],_db_tools.sqlite_current_database['db_path']]
+
+
+def execute_sql_query(query :str):
+
+    _db_state.active_database_cursor.execute(query)
+    headers = []
+    for name in _db_state.active_database_cursor.description:
+        headers.append(name[0])
+    data = _db_state.active_database_cursor.fetchall()
+    result = [True,headers,data,_db_state.active_database_cursor.rowcount]
+    return result

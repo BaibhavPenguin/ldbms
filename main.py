@@ -15,12 +15,13 @@ terminal.print(f"[bold white]Databases currently indexed : [/bold white][bold gr
 
 #Main Loop
 while(True):
-    line = terminal.prompt_user()
-    if not line:
+    user_input = terminal.prompt_user()
+    if not user_input:
         continue
-    command = commands.parse(line)
-    tokens = commands.tokenizer(command)
-    result = commands.execute(tokens)
+    line = commands.parse(user_input)
+    tokens = commands.tokenizer(line)
+    command = {'tokens' : tokens, 'command' : line}
+    result = commands.execute(command)
 
     if result:
         history.history_add_command(line,(globals.SESSION_HISTORY_PATH / globals.filename_session_history),globals.global_history)

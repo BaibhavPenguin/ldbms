@@ -30,9 +30,10 @@ def tokenizer(clean_string :str) -> str:
     return clean_string.split()
 
 #Handlers
-def _command_help(command : list):
-    if len(command) > 2:
-        _terminal.console_errors(command[1],'The [bold white]help[/bold white] command only takes a single argument.','Extra arguments recieved!')
+def _command_help(command_object : dict):
+    tokens = command_object['tokens']
+    if len(tokens) > 2:
+        _terminal.console_errors(tokens[2],'The [bold white]help[/bold white] command only takes a single argument.','Extra arguments recieved!')
         return False
     _ARG_TABLE = {
         'default' : _helper.print_help,
@@ -54,7 +55,7 @@ def _command_help(command : list):
         'export' : _helper.print_export_help,
     }
     try:
-        argument  = command[1].lower()
+        argument  = tokens[1].lower()
     except:
         argument = 'default'
 
@@ -65,28 +66,31 @@ def _command_help(command : list):
         _terminal.console_errors(argument,f'{argument} is not a valid argument for the help command.','Invalid arguments recieved!')
         return False
 
-def _command_clear(command : list):
-    if len(command) > 1:
-        _terminal.console_errors(command[1],'The [bold white]clear and cls[/bold white] command takes no arguments.','Extra arguments recieved!')
+def _command_clear(command_object : dict):
+    tokens = command_object['tokens']
+    if len(tokens) > 1:
+        _terminal.console_errors(command_object['command'],'The [bold white]clear and cls[/bold white] command takes no arguments.','Extra arguments recieved!')
         return False
     _os.system('cls' if _os.name == 'nt' else 'clear')
     return True
 
-def _command_exit(command):
-    if len(command) > 1:
-        _terminal.console_errors(command[1],'The [bold white]exit[/bold white] command takes no arguments.','Extra arguments recieved!')
+def _command_exit(command_object :dict):
+    tokens = command_object['tokens']
+    if len(tokens) > 1:
+        _terminal.console_errors(command_object['command'],'The [bold white]exit[/bold white] command takes no arguments.','Extra arguments recieved!')
         return False
     print()
     _routines.cleanup_ldbms_enviornment()
     _terminal.console_goodbye()
     _sys.exit(0)
 
-def _command_history(command):
-    if len(command) > 2:
-        _terminal.console_errors(command[1],'The [bold white]history[/bold white] command takes a single argument.','Extra arguments recieved!')
+def _command_history(command_object : dict):
+    tokens = command_object['tokens']
+    if len(tokens) > 2:
+        _terminal.console_errors(command_object['command'],'The [bold white]history[/bold white] command takes a single argument.','Extra arguments recieved!')
         return False
 
-   
+    #Construct History Table
     cols = ['[bold yellow]Session History[/bold yellow]']
     rows = []
     try:
@@ -97,11 +101,12 @@ def _command_history(command):
 
     _terminal.print_generic_table(cols,rows,False)
 
-def _command_export(command):
-    if len(command) > 2:
-        _terminal.console_errors(command[1],'The [bold white]export[/bold white] command only takes a single argument.','Extra arguments recieved!')
+def _command_export(command_object :dict):
+    tokens = command_object['tokens']
+    if len(tokens) > 2:
+        _terminal.console_errors(command_object['command'],'The [bold white]export[/bold white] command only takes a single argument.','Extra arguments recieved!')
         return False;
-    result = _history.export_history(_Path(command[1]) , (_globals.SESSION_HISTORY_PATH / _globals.filename_session_history))
+    result = _history.export_history(_Path(tokens[1]) , (_globals.SESSION_HISTORY_PATH / _globals.filename_session_history))
     if result[0]:
         _terminal.print(result[1])
         _terminal.print(result[2])
@@ -110,27 +115,28 @@ def _command_export(command):
         _terminal.console_errors(result[2],result[3],result[1])
         return False
 
-def _command_index(command):
-    if len(command) != 3:
-        _terminal.console_errors(command[0],f"index command requires three arguments index <database_name> <database_path> , {len(command) - 1} provided!","Too few arguments!")   
+def _command_index(command_object :dict):
+    tokens = command_object['tokens']
+    if len(tokens) != 3:
+        _terminal.console_errors(tokens[0],f"The [bold white]index[/bold white] command requires three arguments index <database_name> <database_path> , {len(tokens) - 1} provided!","Command couldn't be executed")   
         return False
-    result = _index.write_index((_globals.PATH_DB_INDEX / _globals.filename_database_index),command[1],command[2])
+    result = _index.write_index((_globals.PATH_DB_INDEX / _globals.filename_database_index),tokens[1],tokens[2])
     if result[0]:
         _terminal.print(result[1])
         _index.read_index((_globals.PATH_DB_INDEX / _globals.filename_database_index),_globals.global_indexed_databases)
         return True
     else:
-        _terminal.console_errors(command[3],result[1],"Invalid path provided!")
+        _terminal.console_errors(tokens[3],result[1],"Invalid path provided!")
     
-def _command_show(command):
-
-    if len(command) < 2:
-        _terminal.console_errors(command[0],'show command takes atleast 1 argument , 0 provided!','Too few arguments recieved!')
+def _command_show(command_object :dict):
+    tokens = command_object['tokens']
+    if len(tokens) < 2:
+        _terminal.console_errors(tokens[0],'The [bold white]show[/bold white] command takes atleast 1 argument , 0 provided!','Too few arguments recieved!')
         return False
     
     _ARGUMENT_LIST = {
         'databases' : _scmd.scmd_show_databases,
-        'tables' : print,
+        'tables' : _scmd.scmed_show_tables,
         'columns' : print,
         'index' : print,
         'create' : print,
@@ -138,43 +144,42 @@ def _command_show(command):
         'variables' : print,
     }
     try:
-        arg = command[1].lower()
-        _ARGUMENT_LIST[arg](command)
+        arg = tokens[1].lower()
+        _ARGUMENT_LIST[arg](command_object)
         return True
     except KeyError:
         _terminal.console_errors(arg,f'{arg} is not a valid argument for the show command.','Invalid arguments recieved!')
         return False
 
-def _command_create(command):
-    if len(command) < 3:
-        _terminal.console_errors(command[0],'create command takes atleast 2 arguments , less than two provided provided!','Too few arguments recieved!')
+def _command_create(command_object :dict):
+    tokens = command_object['tokens']
+    if len(tokens) < 3:
+        _terminal.console_errors(tokens[0],'The [bold white]create[/bold white] command takes atleast 2 arguments , less than two provided provided!','Too few arguments recieved!')
         return False
 
     _ARGUMENT_LIST = {
         'database' : _scmd.scmd_create_database,
+        'table' : _scmd.scmd_execute_sql,
     }
+
     try:
-        arg = command[1].lower()
-        result = _ARGUMENT_LIST[arg](command)
-        if result:
-            _terminal.print(f'[bold white]Created new database [bold green]{command[2]}[/bold green] at [italic yellow]"{(_globals.PATH_DB_DATA / command[2])}.db"') 
-            return True
-        else:
-            _terminal.console_errors(command[1],f"Failed to create database named {command[1]}","Command couldn't be executed!")
-            return False
+        arg = tokens[1].lower()
+        result = _ARGUMENT_LIST[arg](command_object)
+        return result
     except KeyError:
         _terminal.console_errors(arg,f'{arg} is not a valid argument for the create command.','Invalid arguments recieved!')
         return False
 
-def _command_use(command):
-    if len(command) > 2:
-        _terminal.console_errors(command[1],'The [bold white]use[/bold white] command only takes a single argument.','Extra arguments recieved!')
+def _command_use(command_object :dict):
+    tokens = command_object['tokens']
+    if len(tokens) > 2:
+        _terminal.console_errors(tokens[1],'The [bold white]use[/bold white] command only takes a single argument.','Extra arguments recieved!')
         return False
-    elif len(command) < 2:
-        _terminal.console_errors(command[0],'The [bold white]use[/bold white] command takes a single argument, 0 provided!','Too few arguments recieved!')
+    elif len(tokens) < 2:
+        _terminal.console_errors(tokens[0],'The [bold white]use[/bold white] command takes a single argument, 0 provided!','Too few arguments recieved!')
         return False
 
-    db_name = command[1]
+    db_name = tokens[1]
     try:
         db_path = _globals.global_indexed_databases[db_name]
     except KeyError:
@@ -185,10 +190,16 @@ def _command_use(command):
     _terminal.print(f'[bold white]Database changed, All subsequent queries will affect [bold green]{db_name}[/bold green][/bold white]')
     return True
 
-def _command_database(command):
+def _command_database(command_object :dict):
+    tokens = command_object['tokens']
+
+    if len(tokens) != 1:
+        _terminal.console_errors(f"{tokens[1]}", f'The [bold white]database[/bold white] command only takes a single argument, {len(tokens)} recieved!', 'Extra arguments provided!')
+        return False
+    
     current_database = _db_functions.get_current_database()
-    _terminal.print(f'[bold white]Currently addressing [bold green]{current_database[0]}[/bold green][/bold white]')
-    _terminal.print(f'[bold white]Database path : [bold yellow]{current_database[1]}[/bold yellow][bold white]')
+    _terminal.print(f'[bold white]Active Database: [bold green]{current_database[0]}[/bold green][/bold white]')
+    _terminal.print(f'[bold white]Database Path: [bold yellow]{current_database[1]}[/bold yellow][bold white]')
     return True
 
 _COMMAND_LIST = {
@@ -211,9 +222,10 @@ _COMMAND_LIST = {
 
 }
 
-def execute(command :list):
+def execute(command_object :dict):
+    tokenised_command = command_object['tokens']
     try:
-        result = _COMMAND_LIST[command[0].lower()](command)
+        result = _COMMAND_LIST[tokenised_command[0].lower()](command_object)
         return result
     except KeyError:
         return False
